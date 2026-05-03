@@ -1,0 +1,98 @@
+[
+    {
+        "msAwayScore": 140,
+        "msAwayTeam": "New York Knicks",
+        "msCommence": "2026-04-30T23:13:00Z",
+        "msCompleted": true,
+        "msHomeScore": 89,
+        "msHomeTeam": "Atlanta Hawks"
+    },
+    {
+        "msAwayScore": 93,
+        "msAwayTeam": "Boston Celtics",
+        "msCommence": "2026-05-01T00:13:11Z",
+        "msCompleted": true,
+        "msHomeScore": 106,
+        "msHomeTeam": "Philadelphia 76ers"
+    },
+    {
+        "msAwayScore": 98,
+        "msAwayTeam": "Denver Nuggets",
+        "msCommence": "2026-05-01T01:45:00Z",
+        "msCompleted": true,
+        "msHomeScore": 110,
+        "msHomeTeam": "Minnesota Timberwolves"
+    },
+    {
+        "msAwayScore": 93,
+        "msAwayTeam": "Detroit Pistons",
+        "msCommence": "2026-05-01T23:09:16Z",
+        "msCompleted": true,
+        "msHomeScore": 79,
+        "msHomeTeam": "Orlando Magic"
+    },
+    {
+        "msAwayScore": 110,
+        "msAwayTeam": "Cleveland Cavaliers",
+        "msCommence": "2026-05-01T23:41:07Z",
+        "msCompleted": true,
+        "msHomeScore": 112,
+        "msHomeTeam": "Toronto Raptors"
+    },
+    {
+        "msAwayScore": 98,
+        "msAwayTeam": "Los Angeles Lakers",
+        "msCommence": "2026-05-02T01:48:34Z",
+        "msCompleted": true,
+        "msHomeScore": 78,
+        "msHomeTeam": "Houston Rockets"
+    },
+    {
+        "msAwayScore": 109,
+        "msAwayTeam": "Philadelphia 76ers",
+        "msCommence": "2026-05-02T23:36:16Z",
+        "msCompleted": true,
+        "msHomeScore": 100,
+        "msHomeTeam": "Boston Celtics"
+    },
+    {
+        "msAwayScore": null,
+        "msAwayTeam": "Orlando Magic",
+        "msCommence": "2026-05-03T19:40:00Z",
+        "msCompleted": false,
+        "msHomeScore": null,
+        "msHomeTeam": "Detroit Pistons"
+    },
+    {
+        "msAwayScore": null,
+        "msAwayTeam": "Toronto Raptors",
+        "msCommence": "2026-05-03T23:40:00Z",
+        "msCompleted": false,
+        "msHomeScore": null,
+        "msHomeTeam": "Cleveland Cavaliers"
+    },
+    {
+        "msAwayScore": null,
+        "msAwayTeam": "Philadelphia 76ers",
+        "msCommence": "2026-05-05T00:10:00Z",
+        "msCompleted": false,
+        "msHomeScore": null,
+        "msHomeTeam": "New York Knicks"
+    },
+    {
+        "msAwayScore": null,
+        "msAwayTeam": "Minnesota Timberwolves",
+        "msCommence": "2026-05-05T01:40:00Z",
+        "msCompleted": false,
+        "msHomeScore": null,
+        "msHomeTeam": "San Antonio Spurs"
+    },
+    {
+        "msAwayScore": null,
+        "msAwayTeam": "Los Angeles Lakers",
+        "msCommence": "2026-05-06T01:40:00Z",
+        "msCompleted": false,
+        "msHomeScore": null,
+        "msHomeTeam": "Oklahoma City Thunder"
+    }
+]

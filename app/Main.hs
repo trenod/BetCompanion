@@ -1,252 +1,369 @@
 {-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE ImportQualifiedPost #-}
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ImportQualifiedPost #-}
 
 module Main where
 
 import Brick
 import Brick.Widgets.List
-import Data.Sequence (Seq)
-import Data.Sequence qualified as Seq
+import Brick.Widgets.Border
+import Brick.Widgets.Center
+import Control.Monad.IO.Class (liftIO)
+import Data.Vector (Vector)
+import Data.Vector qualified as Vec
 import Graphics.Vty
 import Lens.Micro.TH
---import Data.Monoid
-import Control.Monad
-import Control.Monad.State qualified as State
---import qualified Control.Monad.State as MState
-import Control.Monad.IO.Class (liftIO)
---import Data.Text (Text)
---import Data.Text qualified as T
---import Network.HTTP.Simple
-import Control.Applicative
-import Control.Monad
-import Control.Monad.IO.Class
---import Control.Monad.Trans.Either
---import Data.Aeson
-import Data.Monoid
-import Data.Proxy
-import Data.Text (Text)
-import GHC.Generics
---import Servant.API
---import Servant.Client
+import Lens.Micro ((^.))
 
-data State = State {_listyPart :: GenericList Int Seq (Widget Int),
-                    _matchIDcounter :: Integer,
-                    _betIDcounter :: Integer,
-                    _parlays :: [Parlay],
-                    _oddsData :: [Either OddsSummaryBasketball OddsSummarySoccer],
-                    _resultsData :: [Either ResultSummaryBasketball ResultSummarySoccer]
-                    }
+import OddsApi
+  ( fetchNbaOdds
+  , fetchNbaScores
+  , saveOddsToFile
+  , saveScoresToFile
+  , loadOrFetchOdds
+  , loadOrFetchScores
+  , oddsJsonFile
+  , scoresJsonFile
+  , MatchOdds (..)
+  , MatchScore (..)
+  )
 
-makeLenses ''State
 
-type ID = Integer -- The ID of an entity, primary key
-type SportsID = (Sport, ID) -- (sport type, match ID)
-data Sport = Basketball | Soccer deriving (Show, Eq)
-type BetID = (BetType, ID) -- (bet type, bet ID)
-data BetType = Single | Parlay deriving (Show, Eq)
+data Screen
+  = MainMenu
+  | Odds
+  | Scores
+  | CurrentParlay
+  | PastParlays
+  | Statistics
+  deriving (Show, Eq)
 
-data Match = BasketballMatchData BasketballMatch | SoccerMatchData SoccerMatch deriving (Show)
+data Name = MainList | SubList deriving (Show, Eq, Ord)
 
-data BasketballMatch = BasketballMatch
-  { basketballMatchId :: SportsID -- The ID of the match, primary key
-  , basketballMatchOdds :: (Double, Double) -- (home win, away win)
-  , basketballMatchOutcome :: Maybe Integer -- 1 for home win, 2 for away win, Nothing for pending
-  , basketballTeams :: (Text, Text) -- (home team, away team)
+--What side of a match the user has bet on for a given parlay leg.
+data BetSide = Home | Away deriving (Show, Eq)
+
+--A single leg of a parlay bet: a match and which side the user has bet on.
+data ParlayLeg = ParlayLeg
+  { legMatch :: MatchOdds
+  , legSide  :: BetSide
   } deriving (Show)
 
-data SoccerMatch = SoccerMatch
-  { soccerMatchId :: SportsID -- The ID of the match, primary key
-  , soccerMatchOdds :: (Double, Double, Double) -- (home win, draw, away win)
-  , soccerMatchOutcome :: Maybe Integer -- 1 for home win, 2 for draw, 3 for away win, Nothing for pending
-  , soccerTeams :: (Text, Text) -- (home team, away team)
-  } deriving (Show)
+--The state of the app, including screen, menu lists, and loaded data.
+data AppState = AppState
+  { _screen        :: Screen
+  , _mainList      :: List Name String
+  , _subList       :: List Name String
+  , _oddsData      :: [MatchOdds]    -- upcoming matches with odds
+  , _scoresData    :: [MatchScore]   -- recent matches with results
+  , _currentParlay :: [ParlayLeg]    -- legs the user has added
+  }
 
-data BetAPIResult = BetAPIResult
-  { resultBetId :: BetID -- The ID of the bet, primary key
-  , resultMatches :: [Match] -- The matches included in the bet
-  , resultOutcome :: Maybe Bool -- Nothing for pending, Just True for win, Just False for loss
-  } deriving (Show)
+makeLenses ''AppState
 
-data Parlay = Parlay
-  { betID :: BetID -- The ID of the bet, primary key
-  , betType :: BetType -- Single or Parlay
-  , betMatches :: [Match] -- The matches included in the bet
-  , betAmount :: Integer -- The amount of money wagered on the bet
-  , combinedOdds :: Double -- The combined odds for the bet, calculated from the individual match odds
-  , betOutcome :: Maybe Bool -- Nothing for pending, Just True for win, Just False for loss
-  , betRisk :: Double -- A value between 0 and 1 representing the risk level of the bet
-  } deriving (Show)
-instance SQLRow Parlay
-
-parlays :: Table Parlay
-parlays = table "parlays" [#betID :- primary]
-
-type OddsAPIBasketball = 
-  "odds" :> Get '[JSON] [OddsSummaryBasketball]
-  :<|> "results" :> Get '[JSON] [ResultSummaryBasketball]
-
-type OddsAPISoccer =
-  "odds" :> Get '[JSON] [OddsSummarySoccer]
-  :<|> "results" :> Get '[JSON] [ResultSummarySoccer]
-
--- The OddsSummary types represent the data we get from the API for each match, which includes the match ID, sport type, teams, and odds value. The ResultSummary types represent the data we get from the API for the results of each match, which includes the match ID, sport type, teams, and outcome.
-data OddsSummaryBasketball = OddsSummaryBasketball
-  { basketballoddsId :: ID
-  , oddsSport :: Sport
-  , oddsTeams :: (Text, Text)
-  , oddsValue :: Double
-  } deriving (Generic, Show)
-
-data OddsSummarySoccer = OddsSummarySoccer
-  { oddsId :: ID
-  , oddsSport :: Sport
-  , oddsTeams :: (Text, Text)
-  , oddsValue :: Double
-  } deriving (Show)
-
--- The ResultSummary types represent the data we get from the API for the results of each match, which includes the match ID, sport type, teams, and outcome.
-data ResultSummaryBasketball = ResultSummaryBasketball
-  { resultId :: ID
-  , resultSport :: Sport
-  , resultTeams :: (Text, Text)
-  , resultOutcome :: Maybe Integer
-  } deriving (Show)
-
-data ResultSummarySoccer = ResultSummarySoccer
-  { resultId :: ID
-  , resultSport :: Sport
-  , resultTeams :: (Text, Text)
-  , resultOutcome :: Maybe Integer
-  } deriving (Show)
-
--- The FromJSON instances allow us to parse the JSON data we get from the API into our Haskell data types. We use the Aeson library to do this, and we define how to parse each field from the JSON object.
-instance FromJSON OddsSummaryBasketball where
-  parseJSON (Object o) =
-    OddsSummaryBasketball <$> o .: "id"
-                          <*> o .: "sport"
-                          <*> o .: "teams"
-                          <*> o .: "value"
-  parseJSON _ = mzero
-  
-instance FromJSON OddsSummarySoccer where
-  parseJSON (Object o) =
-    OddsSummarySoccer <$> o .: "id"
-                      <*> o .: "sport"
-                      <*> o .: "teams"
-                      <*> o .: "value"
-  parseJSON _ = mzero
-
-instance FromJSON ResultSummaryBasketball where
-  parseJSON (Object o) =
-    ResultSummaryBasketball <$> o .: "id"
-                            <*> o .: "sport"
-                            <*> o .: "teams"
-                            <*> o .: "outcome"
-  parseJSON _ = mzero 
-
-instance FromJSON ResultSummarySoccer where
-    parseJSON (Object o) =
-      ResultSummarySoccer <$> o .: "id"
-                          <*> o .: "sport"
-                          <*> o .: "teams"
-                          <*> o .: "outcome"    
-    parseJSON _ = mzero
+--Dummy data for the Statistics screen, which is not implemented in this version.
+statsItems :: Vector String
+statsItems =
+  Vec.fromList
+    [ "Total bets placed : 0"
+    , "Bets won          : 0"
+    , "Bets lost         : 0"
+    , "Win rate          : -- %"
+    , "Total staked      : 0 NOK"
+    , "Total returned    : 0 NOK"
+    , "Net profit        : 0 NOK"
+    ]
 
 
-
-
-readExternalBets = undefined
-
-getResultsFromAPI = undefined
-
-getMockResultsForTesting = undefined
-
-recordBets = undefined
-
-calculateCombinedOdds = do
-    combinedOdds <- oddsFromMatches matches ==> 
-
-    combinedOdds <- foldM (\acc match -> do
-        odds <- getOddsForMatch match
-        return (acc * odds)) 1.0 matches
-
-getOddsFromAPI = undefined
-
-getMockOddsForTesting :: IO [Either OddsSummaryBasketball OddsSummarySoccer]
-getMockOddsForTesting = do
-    let mockOdds = [OddsSummaryBasketball 1 Basketball ("Team A", "Team B") 1.5, OddsSummarySoccer 2 Soccer ("Team C", "Team D") 2.0]
-    return mockOdds
-
-evaluateRisk :: Double -> IO Double
-evaluateRisk odds = do
-    -- Define thresholds for risk levels
-    let lowRiskThreshold = 1.5
-    let mediumRiskThreshold = 3.0
-
-    -- Determine risk level based on odds
-    if odds < lowRiskThreshold
-        then return 0.2 -- Low risk
-        else if odds < mediumRiskThreshold
-            then return 0.5 -- Medium risk
-            else return 0.8 -- High risk
-
-generateAdvice :: Int -> Double -> IO String
-generateAdvice numberofmatches riskLevel = do
-    let advice = case riskLevel of
-            0.2 -> "This bet is low risk. It has a good chance of winning, but the payout will be smaller."
-            0.5 -> "This bet is medium risk. It has a moderate chance of winning, and the payout will be decent."
-            0.8 -> "This bet is high risk. It has a lower chance of winning, but the payout will be higher."
-    return advice
-
-createHTMLReport :: [Parlay] -> IO ()
-createHTMLReport parlays = do
-    let htmlHeader = "<html><head><title>Betting Report</title></head><body><h1>Betting Report</h1><table border='1'><tr><th>Bet ID</th><th>Bet Type</th><th>Matches</th><th>Amount</th><th>Combined Odds</th><th>Outcome</th><th>Risk Level</th><th>Advice</th></tr>"
-    let htmlFooter = "</table></body></html>"
-    let htmlRows = concatMap parlayToHTMLRow parlays
-    let htmlContent = htmlHeader ++ htmlRows ++ htmlFooter
-    writeFile "betting_report.html" htmlContent 
-
-insertParlayIntoDB :: Parlay -> IO ()
-insertParlayIntoDB parlay = do
-    with SQLite "parlays.sqlite" $ do
-        createTable parlays
-        insert_ parlays parlay
-
-
-draw :: State -> Widget Int
-draw (State l) = renderList showItem True l
+--Formatting a MatchOdds into a single line string for display in the Odds screen.
+formatOdds :: MatchOdds -> String
+formatOdds m =
+  moCommence m
+  ++ "  "
+  ++ moHomeTeam m
+  ++ " vs "
+  ++ moAwayTeam m
+  ++ "   | "
+  ++ priceStr (moHomePrice m)
+  ++ " / "
+  ++ priceStr (moAwayPrice m)
   where
-    showItem :: Bool -> Widget Int -> Widget Int
-    showItem selected w
-      | selected = withAttr (attrName "selected") w
-      | otherwise = w
+    priceStr Nothing  = "--"
+    priceStr (Just p) = show p
 
-state0 :: State
-state0 = State $ list 0 (Seq.fromList [str "hello", str "goodbye"]) 1
+--Format a list of MatchOdds into menu items for the Odds screen.
+oddsToMenuItems :: [MatchOdds] -> Vector String
+oddsToMenuItems [] = Vec.fromList ["(No upcoming matches loaded)"]
+oddsToMenuItems xs = Vec.fromList (map formatOdds xs)
 
+--Format the current parlay into menu items for display in the Current Parlay screen.
+parlayToMenuItems :: [ParlayLeg] -> Vector String
+parlayToMenuItems = Vec.fromList . map fmt
+  where
+    fmt (ParlayLeg m side) = formatOdds m ++ " | " ++ sideTag side
+    sideTag Home = "H"
+    sideTag Away = "A"
+
+--Format a list of MatchScore into menu items for the Scores screen.
+scoresToMenuItems :: [MatchScore] -> Vector String
+scoresToMenuItems [] = Vec.fromList ["(No recent matches loaded)"]
+scoresToMenuItems xs = Vec.fromList (map fmt xs)
+  where
+    fmt m =
+      msCommence m
+      ++ "  "
+      ++ msHomeTeam m
+      ++ " vs "
+      ++ msAwayTeam m
+      ++ "   | "
+      ++ scoreStr m
+    scoreStr m
+      | not (msCompleted m) = "scheduled"
+      | otherwise = case (msHomeScore m, msAwayScore m) of
+          (Just h, Just a) -> show h ++ " - " ++ show a
+          _                -> "completed (no score data)"
+
+--The main menu items for the Main Menu screen.
+mainMenuItems :: Vector String
+mainMenuItems =
+  Vec.fromList ["Odds", "Scores", "Current parlay", "Past parlays", "Statistics"]
+
+--The initial state of the app when it starts up. Starts on the Main Menu with no data loaded and empty parlay.
+initialState :: AppState
+initialState = AppState
+  { _screen        = MainMenu
+  , _mainList      = list MainList mainMenuItems 1
+  , _subList       = list SubList Vec.empty 1
+  , _oddsData      = []
+  , _scoresData    = []
+  , _currentParlay = []
+  }
+
+--Draw the UI based on the current screen. The main menu and sub-screens have different layouts, 
+--so we delegate to separate functions for each.
+drawUI :: AppState -> [Widget Name]
+drawUI st = [ui]
+  where
+    ui = case st ^. screen of
+      MainMenu      -> drawMainMenu st
+      Odds          -> drawSubScreen "Odds"           helpOdds   (st ^. subList)
+      Scores        -> drawSubScreen "Scores"         helpRefr   (st ^. subList)
+      CurrentParlay -> drawSubScreen "Current Parlay" helpPlain  (st ^. subList)
+      PastParlays   -> drawSubScreen "Past Parlays"   helpPlain  (st ^. subList)
+      Statistics    -> drawSubScreen "Statistics"     helpPlain  (st ^. subList)
+    helpOdds  = "Press h/a to bet on home/away, r to refresh, Backspace or Esc to return."
+    helpRefr  = "Press r to refresh, Backspace or Esc to return to the main menu."
+    helpPlain = "Press Backspace or Esc to return to the main menu."
+
+--Drawing the main menu: a centered box with instructions and a list of options. The selected option is highlighted.
+drawMainMenu :: AppState -> Widget Name
+drawMainMenu st =
+  center $
+  borderWithLabel (str " Bet Companion ") $
+  hLimit 70 $
+  vBox
+    [ padBottom (Pad 1) $ str "Use arrow keys to navigate, Enter to select, q to quit."
+    , renderList renderItem True (st ^. mainList)
+    ]
+  where
+    renderItem selected item =
+      let w = str item
+      in if selected then withAttr selectedAttr w else w
+
+--Drawing the sub-screens (Odds, Scores, Current Parlay, Past Parlays, Statistics): similar layout to the main menu 
+--but with different instructions and a different list of items. The selected item is highlighted.
+drawSubScreen :: String -> String -> List Name String -> Widget Name
+drawSubScreen title helpText lst =
+  center $
+  borderWithLabel (str (" " ++ title ++ " ")) $
+  hLimit 80 $
+  vBox
+    [ padBottom (Pad 1) $ str helpText
+    , renderList renderItem True lst
+    ]
+  where
+    renderItem selected item =
+      let w = str item
+      in if selected then withAttr selectedAttr w else w
+
+--Handling events: key presses and other interactions. The behavior depends on which screen we're on, 
+--so we delegate to separate functions for the main menu and sub-screens.
+handleEvent :: BrickEvent Name () -> EventM Name AppState ()
+handleEvent ev = do
+  st <- get
+  case st ^. screen of
+    MainMenu -> handleMainMenu ev
+    _        -> handleSubScreen ev
+
+--Handling events on the main menu: Enter to select an option, q to quit, arrow keys to navigate the list.
+handleMainMenu :: BrickEvent Name () -> EventM Name AppState ()
+handleMainMenu (VtyEvent (EvKey KEnter [])) = do
+  st <- get
+  case listSelectedElement (st ^. mainList) of
+    Nothing        -> return ()
+    Just (_, item) -> navigateTo item
+handleMainMenu (VtyEvent (EvKey (KChar 'q') [])) = halt
+handleMainMenu (VtyEvent ev) = zoom mainList (handleListEvent ev)
+handleMainMenu _ = return ()
+
+--Navigate to a sub-screen based on the selected main menu item. For Odds and Scores, we need to load the data first 
+--(from disk or API) before showing the sub-screen. For the other options, we can directly show the sub-screen with 
+--precomputed items.
+navigateTo :: String -> EventM Name AppState ()
+navigateTo "Odds"           = loadOddsScreen
+navigateTo "Scores"         = loadScoresScreen
+navigateTo "Current parlay" = do
+  st <- get
+  showSubScreen CurrentParlay (parlayToMenuItems (st ^. currentParlay))
+navigateTo "Past parlays"   = do
+  st <- get
+  showSubScreen PastParlays (scoresToMenuItems (st ^. scoresData))
+navigateTo "Statistics"     = showSubScreen Statistics statsItems
+navigateTo _                = return ()
+
+--Helper function to switch to a sub-screen and set the list of items to display. Used by 'navigateTo' 
+--after loading  data.
+showSubScreen :: Screen -> Vector String -> EventM Name AppState ()
+showSubScreen newScreen items = modify $ \s -> s
+  { _screen  = newScreen
+  , _subList = list SubList items 1
+  }
+
+--Load the odds data (from disk or API) and enter the Odds screen. If loading fails, show an error message instead.
+loadOddsScreen :: EventM Name AppState ()
+loadOddsScreen = do
+  result <- liftIO (loadOrFetchOdds apiKey)
+  case result of
+    Right xs -> do
+      modify $ \s -> s { _oddsData = xs }
+      showSubScreen Odds (oddsToMenuItems xs)
+    Left err ->
+      showSubScreen Odds (Vec.fromList ["Error loading odds:", err])
+
+--Load the scores data (from disk or API) and enter the Scores screen. If loading fails, show an error message instead.
+loadScoresScreen :: EventM Name AppState ()
+loadScoresScreen = do
+  result <- liftIO (loadOrFetchScores apiKey 3)
+  case result of
+    Right xs -> do
+      modify $ \s -> s { _scoresData = xs }
+      showSubScreen Scores (scoresToMenuItems xs)
+    Left err ->
+      showSubScreen Scores (Vec.fromList ["Error loading scores:", err])
+
+--Refresh the odds data by fetching from the API again. Update the state with the new data and save it to disk. 
+--If refreshing fails, show an error message.
+refreshOdds :: EventM Name AppState ()
+refreshOdds = do
+  result <- liftIO (fetchNbaOdds apiKey)
+  case result of
+    Right xs -> do
+      liftIO (saveOddsToFile oddsJsonFile xs)
+      modify $ \s -> s
+        { _oddsData = xs
+        , _subList  = list SubList (oddsToMenuItems xs) 1
+        }
+    Left err ->
+      modify $ \s -> s
+        { _subList = list SubList
+            (Vec.fromList ["Refresh failed:", err]) 1
+        }
+
+--Refresh the scores data by fetching from the API again. Update the state with the new data and save it to disk. 
+--If refreshing fails, show an error message.
+refreshScores :: EventM Name AppState ()
+refreshScores = do
+  result <- liftIO (fetchNbaScores apiKey 3)
+  case result of
+    Right xs -> do
+      liftIO (saveScoresToFile scoresJsonFile xs)
+      modify $ \s -> s
+        { _scoresData = xs
+        , _subList    = list SubList (scoresToMenuItems xs) 1
+        }
+    Left err ->
+      modify $ \s -> s
+        { _subList = list SubList
+            (Vec.fromList ["Refresh failed:", err]) 1
+        }
+
+--Handling events on the sub-screens (Odds, Scores, Current Parlay, Past Parlays, Statistics). 
+--Backspace or Esc to return to main menu, q to quit. In the Odds screen, h/a to place a bet on home/away for 
+--the selected match, r to refresh the odds.
+handleSubScreen :: BrickEvent Name () -> EventM Name AppState ()
+handleSubScreen (VtyEvent (EvKey KEsc [])) = goBack
+handleSubScreen (VtyEvent (EvKey KBS  [])) = goBack
+handleSubScreen (VtyEvent (EvKey (KChar 'q') [])) = halt
+handleSubScreen (VtyEvent (EvKey (KChar 'r') [])) = do
+  st <- get
+  case st ^. screen of
+    Odds   -> refreshOdds
+    Scores -> refreshScores
+    _      -> return ()
+handleSubScreen (VtyEvent (EvKey (KChar 'h') [])) = do
+  st <- get
+  case st ^. screen of
+    Odds -> placeBet Home
+    _    -> return ()
+handleSubScreen (VtyEvent (EvKey (KChar 'a') [])) = do
+  st <- get
+  case st ^. screen of
+    Odds -> placeBet Away
+    _    -> return ()
+handleSubScreen (VtyEvent ev) = zoom subList (handleListEvent ev)
+handleSubScreen _ = return ()
+
+--Make a bet on the selected match in the Odds screen by adding a new leg to the current parlay. 
+--The leg includes the match and which side (home/away) the user has bet on. If no match is selected, do nothing.
+placeBet :: BetSide -> EventM Name AppState ()
+placeBet side = do
+  st <- get
+  case listSelected (st ^. subList) of
+    Nothing -> return ()
+    Just i  ->
+      case safeIndex i (st ^. oddsData) of
+        Nothing -> return ()
+        Just m  ->
+          let leg = ParlayLeg m side
+          in modify $ \s -> s { _currentParlay = (s ^. currentParlay) ++ [leg] }
+
+--A safe version of list indexing that returns Nothing if the index is out of bounds, instead of throwing an error.
+safeIndex :: Int -> [a] -> Maybe a
+safeIndex i xs
+  | i < 0          = Nothing
+  | i >= length xs = Nothing
+  | otherwise      = Just (xs !! i)
+
+--Go back to the main menu by setting the screen to MainMenu. The sub-list will be replaced when we navigate to a 
+--new sub-screen, so we don't need to clear it here.
+goBack :: EventM Name AppState ()
+goBack = modify $ \st -> st { _screen = MainMenu }
+
+--Attributes and styling: define a custom attribute for the selected item in the lists, which will have a 
+--blue background and white foreground.
+selectedAttr :: AttrName
+selectedAttr = attrName "selected"
+
+theAttrMap :: AttrMap
+theAttrMap = attrMap defAttr
+  [ (selectedAttr, withBackColor (withForeColor defAttr white) blue)
+  ]
+
+
+-- The API key for the-odds-api.com
+apiKey :: String
+apiKey = "insert_api_key_here"
+
+-- The main entry point of the application. We create the Brick app with the appropriate drawing and event handling 
+--functions,
 main :: IO ()
 main = do
-  with SQLite "parlays.sqlite" $ do
-    -- Create the database and tables if they don't exist
-    createTable parlays
-    -- Insert some mock data for testing
-    insert_ parlays (Parlay (Single, 1) Single [BasketballMatchData (BasketballMatch (Basketball, 1) (1.5, 2.5) Nothing ("Team A", "Team B"))] 100 1.5 Nothing 0.5)
-    insert_ parlays (Parlay (Single, 2) Single [SoccerMatchData (SoccerMatch (Soccer, 2) (2.0, 3.0, 4.0) Nothing ("Team C", "Team D"))] 50 2.0 Nothing 0.7)   
-  let app =
-        App
-          { appDraw = \state -> [draw state],
-            appChooseCursor = showFirstCursor,
-            appHandleEvent = handleEvent,
-            appStartEvent = return (),
-            appAttrMap = const (attrMap defAttr [(attrName "selected", bg blue)])
-          }
-  _ <- defaultMain app state0
+  let app = App
+        { appDraw         = drawUI
+        , appChooseCursor = showFirstCursor
+        , appHandleEvent  = handleEvent
+        , appStartEvent   = return ()
+        , appAttrMap      = const theAttrMap
+        }
+  _ <- defaultMain app initialState
   return ()
-
-handleEvent :: BrickEvent Int () -> EventM Int State ()
-handleEvent (VtyEvent ev) = zoom listyPart $ handleListEvent ev
-handleEvent _ = return ()

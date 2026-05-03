@@ -10,6 +10,26 @@
   (major1) == 0 && (major2) <  1 || \
   (major1) == 0 && (major2) == 1 && (minor) <= 0)
 #endif /* MIN_VERSION_BetCompanion */
+/* package aeson-2.2.3.0 */
+#ifndef VERSION_aeson
+#define VERSION_aeson "2.2.3.0"
+#endif /* VERSION_aeson */
+#ifndef MIN_VERSION_aeson
+#define MIN_VERSION_aeson(major1,major2,minor) (\
+  (major1) <  2 || \
+  (major1) == 2 && (major2) <  2 || \
+  (major1) == 2 && (major2) == 2 && (minor) <= 3)
+#endif /* MIN_VERSION_aeson */
+/* package aeson-pretty-0.8.10 */
+#ifndef VERSION_aeson_pretty
+#define VERSION_aeson_pretty "0.8.10"
+#endif /* VERSION_aeson_pretty */
+#ifndef MIN_VERSION_aeson_pretty
+#define MIN_VERSION_aeson_pretty(major1,major2,minor) (\
+  (major1) <  0 || \
+  (major1) == 0 && (major2) <  8 || \
+  (major1) == 0 && (major2) == 8 && (minor) <= 10)
+#endif /* MIN_VERSION_aeson_pretty */
 /* package base-4.18.3.0 */
 #ifndef VERSION_base
 #define VERSION_base "4.18.3.0"
@@ -30,6 +50,16 @@
   (major1) == 2 && (major2) <  10 || \
   (major1) == 2 && (major2) == 10 && (minor) <= 0)
 #endif /* MIN_VERSION_brick */
+/* package bytestring-0.11.5.4 */
+#ifndef VERSION_bytestring
+#define VERSION_bytestring "0.11.5.4"
+#endif /* VERSION_bytestring */
+#ifndef MIN_VERSION_bytestring
+#define MIN_VERSION_bytestring(major1,major2,minor) (\
+  (major1) <  0 || \
+  (major1) == 0 && (major2) <  11 || \
+  (major1) == 0 && (major2) == 11 && (minor) <= 5)
+#endif /* MIN_VERSION_bytestring */
 /* package containers-0.6.7 */
 #ifndef VERSION_containers
 #define VERSION_containers "0.6.7"
@@ -40,6 +70,46 @@
   (major1) == 0 && (major2) <  6 || \
   (major1) == 0 && (major2) == 6 && (minor) <= 7)
 #endif /* MIN_VERSION_containers */
+/* package directory-1.3.8.5 */
+#ifndef VERSION_directory
+#define VERSION_directory "1.3.8.5"
+#endif /* VERSION_directory */
+#ifndef MIN_VERSION_directory
+#define MIN_VERSION_directory(major1,major2,minor) (\
+  (major1) <  1 || \
+  (major1) == 1 && (major2) <  3 || \
+  (major1) == 1 && (major2) == 3 && (minor) <= 8)
+#endif /* MIN_VERSION_directory */
+/* package http-client-0.7.19 */
+#ifndef VERSION_http_client
+#define VERSION_http_client "0.7.19"
+#endif /* VERSION_http_client */
+#ifndef MIN_VERSION_http_client
+#define MIN_VERSION_http_client(major1,major2,minor) (\
+  (major1) <  0 || \
+  (major1) == 0 && (major2) <  7 || \
+  (major1) == 0 && (major2) == 7 && (minor) <= 19)
+#endif /* MIN_VERSION_http_client */
+/* package http-client-tls-0.3.6.4 */
+#ifndef VERSION_http_client_tls
+#define VERSION_http_client_tls "0.3.6.4"
+#endif /* VERSION_http_client_tls */
+#ifndef MIN_VERSION_http_client_tls
+#define MIN_VERSION_http_client_tls(major1,major2,minor) (\
+  (major1) <  0 || \
+  (major1) == 0 && (major2) <  3 || \
+  (major1) == 0 && (major2) == 3 && (minor) <= 6)
+#endif /* MIN_VERSION_http_client_tls */
+/* package microlens-0.5.0.0 */
+#ifndef VERSION_microlens
+#define VERSION_microlens "0.5.0.0"
+#endif /* VERSION_microlens */
+#ifndef MIN_VERSION_microlens
+#define MIN_VERSION_microlens(major1,major2,minor) (\
+  (major1) <  0 || \
+  (major1) == 0 && (major2) <  5 || \
+  (major1) == 0 && (major2) == 5 && (minor) <= 0)
+#endif /* MIN_VERSION_microlens */
 /* package microlens-mtl-0.2.1.1 */
 #ifndef VERSION_microlens_mtl
 #define VERSION_microlens_mtl "0.2.1.1"
@@ -80,6 +150,26 @@
   (major1) == 2 && (major2) <  3 || \
   (major1) == 2 && (major2) == 3 && (minor) <= 1)
 #endif /* MIN_VERSION_mtl */
+/* package servant-0.20.3.0 */
+#ifndef VERSION_servant
+#define VERSION_servant "0.20.3.0"
+#endif /* VERSION_servant */
+#ifndef MIN_VERSION_servant
+#define MIN_VERSION_servant(major1,major2,minor) (\
+  (major1) <  0 || \
+  (major1) == 0 && (major2) <  20 || \
+  (major1) == 0 && (major2) == 20 && (minor) <= 3)
+#endif /* MIN_VERSION_servant */
+/* package servant-client-0.20.3.0 */
+#ifndef VERSION_servant_client
+#define VERSION_servant_client "0.20.3.0"
+#endif /* VERSION_servant_client */
+#ifndef MIN_VERSION_servant_client
+#define MIN_VERSION_servant_client(major1,major2,minor) (\
+  (major1) <  0 || \
+  (major1) == 0 && (major2) <  20 || \
+  (major1) == 0 && (major2) == 20 && (minor) <= 3)
+#endif /* MIN_VERSION_servant_client */
 /* package text-2.0.2 */
 #ifndef VERSION_text
 #define VERSION_text "2.0.2"
@@ -90,6 +180,16 @@
   (major1) == 2 && (major2) <  0 || \
   (major1) == 2 && (major2) == 0 && (minor) <= 2)
 #endif /* MIN_VERSION_text */
+/* package vector-0.13.2.0 */
+#ifndef VERSION_vector
+#define VERSION_vector "0.13.2.0"
+#endif /* VERSION_vector */
+#ifndef MIN_VERSION_vector
+#define MIN_VERSION_vector(major1,major2,minor) (\
+  (major1) <  0 || \
+  (major1) == 0 && (major2) <  13 || \
+  (major1) == 0 && (major2) == 13 && (minor) <= 2)
+#endif /* MIN_VERSION_vector */
 /* package vty-6.5 */
 #ifndef VERSION_vty
 #define VERSION_vty "6.5"
