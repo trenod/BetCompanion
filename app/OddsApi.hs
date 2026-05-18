@@ -23,6 +23,13 @@ module OddsApi
     -- * File paths used by the helpers above
   , oddsJsonFile
   , scoresJsonFile
+  , parlayJsonFile
+    -- * Parlay persistence types and functions
+  , StoredParlayLeg (..)
+  , StoredParlay (..)
+  , loadParlaysFromFile
+  , saveParlaysToFile
+  , appendParlayToFile
   ) where
 
 import Control.Exception      (SomeException, try)
@@ -258,15 +265,52 @@ saveJson path value = do
 --Loading from JSON files. We read the file contents and then use 'eitherDecode' to parse the JSON into our 
 --Haskell types.
 
-oddsJsonFile, scoresJsonFile :: FilePath
+-- File paths
+oddsJsonFile, scoresJsonFile, parlayJsonFile :: FilePath
 oddsJsonFile   = "nba_odds.json"
 scoresJsonFile = "nba_scores.json"
+parlayJsonFile = "nba_parlays.json"
 
 loadOddsFromFile :: FilePath -> IO (Either String [MatchOdds])
 loadOddsFromFile = loadJson
 
 loadScoresFromFile :: FilePath -> IO (Either String [MatchScore])
 loadScoresFromFile = loadJson
+
+-- Persistence types for parlays saved by the user.
+data StoredParlayLeg = StoredParlayLeg
+  { splMatch :: MatchOdds
+  , splSide  :: String  -- "Home" or "Away"
+  } deriving (Show, Generic)
+
+data StoredParlay = StoredParlay
+  { spName :: String
+  , spLegs :: [StoredParlayLeg]
+  } deriving (Show, Generic)
+
+instance ToJSON StoredParlayLeg
+instance FromJSON StoredParlayLeg
+instance ToJSON StoredParlay
+instance FromJSON StoredParlay
+
+-- Load and save parlays (the file contains an array of StoredParlay)
+loadParlaysFromFile :: FilePath -> IO (Either String [StoredParlay])
+loadParlaysFromFile = loadJson
+
+saveParlaysToFile :: FilePath -> [StoredParlay] -> IO ()
+saveParlaysToFile = saveJson
+
+-- Append a single parlay to the parlay file (reads existing, appends, writes back).
+appendParlayToFile :: FilePath -> StoredParlay -> IO ()
+appendParlayToFile path par = do
+  exists <- doesFileExist path
+  if exists
+    then do
+      eres <- loadParlaysFromFile path
+      case eres of
+        Right xs -> saveParlaysToFile path (xs ++ [par])
+        Left _   -> saveParlaysToFile path [par]
+    else saveParlaysToFile path [par]
 
 loadJson :: FromJSON a => FilePath -> IO (Either String a)
 loadJson path = do

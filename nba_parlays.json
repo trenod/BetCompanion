@@ -1,0 +1,107 @@
+[
+    {
+        "spLegs": [
+            {
+                "splMatch": {
+                    "moAwayPrice": 3.5,
+                    "moAwayTeam": "Orlando Magic",
+                    "moCommence": "2026-05-03T19:40:00Z",
+                    "moHomePrice": 1.3,
+                    "moHomeTeam": "Detroit Pistons"
+                },
+                "splSide": "Home"
+            },
+            {
+                "splMatch": {
+                    "moAwayPrice": 3.25,
+                    "moAwayTeam": "Toronto Raptors",
+                    "moCommence": "2026-05-03T23:40:00Z",
+                    "moHomePrice": 1.34,
+                    "moHomeTeam": "Cleveland Cavaliers"
+                },
+                "splSide": "Home"
+            },
+            {
+                "splMatch": {
+                    "moAwayPrice": 3.05,
+                    "moAwayTeam": "Philadelphia 76ers",
+                    "moCommence": "2026-05-05T00:10:00Z",
+                    "moHomePrice": 1.38,
+                    "moHomeTeam": "New York Knicks"
+                },
+                "splSide": "Home"
+            }
+        ],
+        "spName": "Parlay 2026-05-12 07:58:53"
+    },
+    {
+        "spLegs": [
+            {
+                "splMatch": {
+                    "moAwayPrice": 3.05,
+                    "moAwayTeam": "Philadelphia 76ers",
+                    "moCommence": "2026-05-05T00:10:00Z",
+                    "moHomePrice": 1.38,
+                    "moHomeTeam": "New York Knicks"
+                },
+                "splSide": "Home"
+            },
+            {
+                "splMatch": {
+                    "moAwayPrice": 6,
+                    "moAwayTeam": "Minnesota Timberwolves",
+                    "moCommence": "2026-05-05T01:40:00Z",
+                    "moHomePrice": 1.13,
+                    "moHomeTeam": "San Antonio Spurs"
+                },
+                "splSide": "Home"
+            },
+            {
+                "splMatch": {
+                    "moAwayPrice": 7.5,
+                    "moAwayTeam": "Los Angeles Lakers",
+                    "moCommence": "2026-05-06T01:40:00Z",
+                    "moHomePrice": 1.09,
+                    "moHomeTeam": "Oklahoma City Thunder"
+                },
+                "splSide": "Home"
+            }
+        ],
+        "spName": "Parlay 2026-05-12 08:14:18"
+    },
+    {
+        "spLegs": [
+            {
+                "splMatch": {
+                    "moAwayPrice": 3.05,
+                    "moAwayTeam": "Philadelphia 76ers",
+                    "moCommence": "2026-05-05T00:10:00Z",
+                    "moHomePrice": 1.38,
+                    "moHomeTeam": "New York Knicks"
+                },
+                "splSide": "Away"
+            },
+            {
+                "splMatch": {
+                    "moAwayPrice": 6,
+                    "moAwayTeam": "Minnesota Timberwolves",
+                    "moCommence": "2026-05-05T01:40:00Z",
+                    "moHomePrice": 1.13,
+                    "moHomeTeam": "San Antonio Spurs"
+                },
+                "splSide": "Home"
+            },
+            {
+                "splMatch": {
+                    "moAwayPrice": 7.5,
+                    "moAwayTeam": "Los Angeles Lakers",
+                    "moCommence": "2026-05-06T01:40:00Z",
+                    "moHomePrice": 1.09,
+                    "moHomeTeam": "Oklahoma City Thunder"
+                },
+                "splSide": "Away"
+            }
+        ],
+        "spName": "Parlay 2026-05-18 07:06:35"
+    }
+]

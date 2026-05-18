@@ -88,6 +88,7 @@ executable BetCompanion
         , servant               >= 0.19
         , servant-client        >= 0.19
         , directory
+        , time
     -- Directories containing source files.
     hs-source-dirs:   app
 
