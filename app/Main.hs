@@ -409,7 +409,7 @@ theAttrMap = attrMap defAttr
 
 -- The API key for the-odds-api.com
 apiKey :: String
-apiKey = "807b3198e31e0ec85f3bd2541a156d0e"
+apiKey = "insert_your_api_key_here"
 
 -- The main entry point of the application. We create the Brick app with the appropriate drawing and event handling 
 --functions,

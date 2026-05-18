@@ -103,5 +103,30 @@
             }
         ],
         "spName": "Parlay 2026-05-18 07:06:35"
+    },
+    {
+        "spLegs": [
+            {
+                "splMatch": {
+                    "moAwayPrice": 2.85,
+                    "moAwayTeam": "San Antonio Spurs",
+                    "moCommence": "2026-05-19T00:40:00Z",
+                    "moHomePrice": 1.42,
+                    "moHomeTeam": "Oklahoma City Thunder"
+                },
+                "splSide": "Home"
+            },
+            {
+                "splMatch": {
+                    "moAwayPrice": 2.95,
+                    "moAwayTeam": "Cleveland Cavaliers",
+                    "moCommence": "2026-05-20T00:10:00Z",
+                    "moHomePrice": 1.4,
+                    "moHomeTeam": "New York Knicks"
+                },
+                "splSide": "Away"
+            }
+        ],
+        "spName": "Parlay 2026-05-18 08:41:49"
     }
 ]

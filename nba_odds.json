@@ -1,37 +1,16 @@
 [
     {
-        "moAwayPrice": 3.5,
-        "moAwayTeam": "Orlando Magic",
-        "moCommence": "2026-05-03T19:40:00Z",
-        "moHomePrice": 1.3,
-        "moHomeTeam": "Detroit Pistons"
-    },
-    {
-        "moAwayPrice": 3.25,
-        "moAwayTeam": "Toronto Raptors",
-        "moCommence": "2026-05-03T23:40:00Z",
-        "moHomePrice": 1.34,
-        "moHomeTeam": "Cleveland Cavaliers"
-    },
-    {
-        "moAwayPrice": 3.05,
-        "moAwayTeam": "Philadelphia 76ers",
-        "moCommence": "2026-05-05T00:10:00Z",
-        "moHomePrice": 1.38,
-        "moHomeTeam": "New York Knicks"
-    },
-    {
-        "moAwayPrice": 6,
-        "moAwayTeam": "Minnesota Timberwolves",
-        "moCommence": "2026-05-05T01:40:00Z",
-        "moHomePrice": 1.13,
-        "moHomeTeam": "San Antonio Spurs"
-    },
-    {
-        "moAwayPrice": 7.5,
-        "moAwayTeam": "Los Angeles Lakers",
-        "moCommence": "2026-05-06T01:40:00Z",
-        "moHomePrice": 1.09,
+        "moAwayPrice": 2.85,
+        "moAwayTeam": "San Antonio Spurs",
+        "moCommence": "2026-05-19T00:40:00Z",
+        "moHomePrice": 1.42,
         "moHomeTeam": "Oklahoma City Thunder"
+    },
+    {
+        "moAwayPrice": 2.95,
+        "moAwayTeam": "Cleveland Cavaliers",
+        "moCommence": "2026-05-20T00:10:00Z",
+        "moHomePrice": 1.4,
+        "moHomeTeam": "New York Knicks"
     }
 ]
